@@ -112,12 +112,53 @@ CREATE POLICY "profiles_insert" ON profiles FOR INSERT WITH CHECK (auth.uid() = 
 CREATE POLICY "profiles_update" ON profiles FOR UPDATE USING (auth.uid() = id);
 
 CREATE POLICY "tenants_insert" ON tenants FOR INSERT TO authenticated WITH CHECK (true);
-CREATE POLICY "tenants_select" ON tenants FOR SELECT TO authenticated USING (true);
+CREATE POLICY "tenants_select" ON tenants FOR SELECT TO authenticated USING (
+  EXISTS (
+    SELECT 1 FROM profiles 
+    WHERE profiles.id = auth.uid() 
+    AND profiles.tenant_id = tenants.id
+  )
+);
 
-CREATE POLICY "products_all" ON products FOR ALL TO authenticated USING (true);
-CREATE POLICY "customers_all" ON customers FOR ALL TO authenticated USING (true);
-CREATE POLICY "plants_all" ON user_plants FOR ALL TO authenticated USING (profile_id = auth.uid());
-CREATE POLICY "notif_all" ON notifications FOR ALL TO authenticated USING (profile_id = auth.uid());
+CREATE POLICY "products_all" ON products FOR ALL TO authenticated 
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles 
+      WHERE profiles.id = auth.uid() 
+      AND profiles.tenant_id = products.tenant_id
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM profiles 
+      WHERE profiles.id = auth.uid() 
+      AND profiles.tenant_id = products.tenant_id
+    )
+  );
+
+CREATE POLICY "customers_all" ON customers FOR ALL TO authenticated 
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles 
+      WHERE profiles.id = auth.uid() 
+      AND profiles.tenant_id = customers.tenant_id
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM profiles 
+      WHERE profiles.id = auth.uid() 
+      AND profiles.tenant_id = customers.tenant_id
+    )
+  );
+
+CREATE POLICY "plants_all" ON user_plants FOR ALL TO authenticated 
+  USING (profile_id = auth.uid())
+  WITH CHECK (profile_id = auth.uid());
+
+CREATE POLICY "notif_all" ON notifications FOR ALL TO authenticated 
+  USING (profile_id = auth.uid())
+  WITH CHECK (profile_id = auth.uid());
 
 -- 6. TRIGGER - CRIA PROFILE AUTOMATICAMENTE NO CADASTRO
 CREATE OR REPLACE FUNCTION public.handle_new_user()
