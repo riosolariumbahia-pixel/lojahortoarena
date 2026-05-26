@@ -13,15 +13,34 @@ function AppContent() {
   // Trigger rebuild to update Vercel environment variables
   const { currentView, setCurrentView, setUser } = useStore();
 
-  const [conviteStore, setConviteStore] = useState<string | null>(null);
+  const [conviteStore, setConviteStore] = useState<{ id: string; name: string } | null>(null);
 
   // Detectar link de convite: ?loja=nome-da-loja
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const loja = params.get('loja');
     if (loja && currentView === 'landing') {
-      const storeName = loja.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-      setConviteStore(storeName);
+      // Buscar tenant real no Supabase pelo slug
+      import('./lib/supabase').then(({ supabase, isSupabaseConfigured }) => {
+        if (isSupabaseConfigured) {
+          supabase
+            .from('tenants')
+            .select('id, name')
+            .eq('slug', loja)
+            .single()
+            .then(({ data, error }) => {
+              if (data && !error) {
+                setConviteStore({ id: data.id, name: data.name });
+              } else {
+                const storeName = loja.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                setConviteStore({ id: 'demo-tenant', name: storeName });
+              }
+            });
+        } else {
+          const storeName = loja.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+          setConviteStore({ id: 'demo-tenant', name: storeName });
+        }
+      });
     }
   }, [currentView]);
 
@@ -32,7 +51,7 @@ function AppContent() {
       name: name || 'Jardinista',
       email: email || '',
       role: 'cliente',
-      tenantId: conviteStore || undefined,
+      tenantId: conviteStore?.id || undefined,
       xp: 0,
       level: 1,
       coins: 0,
@@ -59,7 +78,7 @@ function AppContent() {
         {conviteStore && currentView === 'landing' ? (
           <motion.div key="convite" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <ClienteConvite
-              storeName={conviteStore}
+              storeName={conviteStore.name}
               onEnter={enterAsCliente}
             />
           </motion.div>

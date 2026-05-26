@@ -11,6 +11,7 @@ export interface User {
   role: UserRole;
   avatar?: string;
   tenantId?: string;
+  tenantSlug?: string;
   xp: number;
   level: number;
   coins: number;

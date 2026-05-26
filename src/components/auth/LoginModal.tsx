@@ -28,12 +28,23 @@ export default function LoginModal({ open, onClose, onSwitchToRegister }: Props)
         const result = await login(email, password);
         
         if (result.success && result.profile) {
+          let tenantSlug = undefined;
+          if (result.profile.role === 'lojista' && result.profile.tenant_id) {
+            const { data } = await supabase
+              .from('tenants')
+              .select('slug')
+              .eq('id', result.profile.tenant_id)
+              .single();
+            if (data) tenantSlug = data.slug;
+          }
+
           setUser({
             id: result.profile.id,
             name: result.profile.name,
             email: result.profile.email,
             role: result.profile.role as 'admin' | 'lojista' | 'cliente',
             tenantId: result.profile.tenant_id || undefined,
+            tenantSlug,
             xp: result.profile.xp,
             level: result.profile.level,
             coins: result.profile.coins,
@@ -42,12 +53,10 @@ export default function LoginModal({ open, onClose, onSwitchToRegister }: Props)
           setCurrentView(result.profile.role as 'admin' | 'lojista' | 'cliente');
           onClose();
         } else {
-          // Se falhar no Supabase, tentar demo
-          tryDemoLogin();
+          setError(result.error || 'Email ou senha inválidos.');
         }
-      } catch {
-        // Se erro no Supabase, tentar demo
-        tryDemoLogin();
+      } catch (err: any) {
+        setError(err?.message || 'Ocorreu um erro ao fazer login.');
       }
     } else {
       // Modo demo

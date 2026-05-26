@@ -18,7 +18,7 @@ export default function DashboardContent() {
   const totalOrders = lojistaData.orders.length;
 
   // Gerar link do cliente
-  const storeSlug = storeName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  const storeSlug = user?.tenantSlug || storeName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
   const clienteLink = `${window.location.origin}?loja=${storeSlug}`;
 
   const copyLink = () => {
