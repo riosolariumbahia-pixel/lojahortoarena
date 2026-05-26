@@ -10,6 +10,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Toaster } from 'react-hot-toast';
 
 function AppContent() {
+  // Trigger rebuild to update Vercel environment variables
   const { currentView, setCurrentView, setUser } = useStore();
 
   const [conviteStore, setConviteStore] = useState<string | null>(null);
