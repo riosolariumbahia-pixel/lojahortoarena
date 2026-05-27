@@ -10,12 +10,7 @@ const __dirname = path.dirname(__filename);
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "src"),
-    },
+    alias: { "@": path.resolve(__dirname, "src") },
   },
-  build: {
-    outDir: "dist",
-    sourcemap: false,
-  },
+  build: { outDir: "dist", sourcemap: false },
 });
